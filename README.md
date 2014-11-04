@@ -3,6 +3,14 @@ GnomeExtensionMaximusTwo
 
 Removes the title bar on maximised windows. See: https://extensions.gnome.org/extension/844/maximus-two/
 
+Prerequisites
+=============
+You will likely need `xprop` installed for this extension to work.
+Under, this should be provided as a dependency of [`xorg-utils`](https://www.archlinux.org/packages/extra/any/xorg-utils/) package (the [`xorg-xprop`](https://www.archlinux.org/packages/extra/x86_64/xorg-xprop/) package.
+Under Ubuntu, this is provided by the [`x11-utils`](http://packages.ubuntu.com/trusty/x11-utils)
+Under Fedora, this is provided by the `xorg-x11-utils` package
+
+
 How to install
 ==============
  - Visit https://extensions.gnome.org/extension/844/maximus-two/ on the machine you want to install it on. If prompted, allow the activation of the 'Gnome Shell Integration' Plugin.
