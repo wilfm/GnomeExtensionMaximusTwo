@@ -6,8 +6,8 @@ Removes the title bar on maximised windows. See: https://extensions.gnome.org/ex
 Prerequisites
 =============
 You will likely need `xprop` installed for this extension to work.
-Under, this should be provided as a dependency of [`xorg-utils`](https://www.archlinux.org/packages/extra/any/xorg-utils/) package (the [`xorg-xprop`](https://www.archlinux.org/packages/extra/x86_64/xorg-xprop/) package.
-Under Ubuntu, this is provided by the [`x11-utils`](http://packages.ubuntu.com/trusty/x11-utils)
+Under Arch, this should be provided as a dependency of [`xorg-utils`](https://www.archlinux.org/packages/extra/any/xorg-utils/) package (the [`xorg-xprop`](https://www.archlinux.org/packages/extra/x86_64/xorg-xprop/) package.<br>
+Under Debian/Ubuntu/*(and probably most other debian based distros), this is provided by the [`x11-utils`](http://packages.ubuntu.com/trusty/x11-utils)<br>
 Under Fedora, this is provided by the `xorg-x11-utils` package
 
 
