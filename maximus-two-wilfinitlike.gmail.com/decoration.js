@@ -50,21 +50,22 @@ function guessWindowXID(win) {
 		id = GLib.spawn_command_line_sync('xwininfo -children -id 0x%x'.format(act['x-window']));
 		if (id[0]) {
 			let str = id[1].toString();
+			if (str) {
+				/* The X ID of the window is the one preceding the target window's title.
+				 * This is to handle cases where the window has no frame and so
+				 * act['x-window'] is actually the X ID we want, not the child.
+				 */
+				let regexp = new RegExp('(0x[0-9a-f]+) +"%s"'.format(win.title));
+				id = str.match(regexp);
+				if (id) {
+					return id[1];
+				}
 
-			/* The X ID of the window is the one preceding the target window's title.
-			 * This is to handle cases where the window has no frame and so
-			 * act['x-window'] is actually the X ID we want, not the child.
-			 */
-			let regexp = new RegExp('(0x[0-9a-f]+) +"%s"'.format(win.title));
-			id = str.match(regexp);
-			if (id) {
-				return id[1];
-			}
-
-			/* Otherwise, just grab the child and hope for the best */
-			id = str.split(/child(?:ren)?:/)[1].match(/0x[0-9a-f]+/);
-			if (id) {
-				return id[0];
+				/* Otherwise, just grab the child and hope for the best */
+				id = str.split(/child(?:ren)?:/)[1].match(/0x[0-9a-f]+/);
+				if (id) {
+					return id[0];
+				}
 			}
 		}
 	}
