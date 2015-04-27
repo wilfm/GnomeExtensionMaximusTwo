@@ -114,9 +114,9 @@ function onHover(actor) {
 			if (!showTooltip) {
 				WARN('showTooltip is false and delay callback ran.');
 			}
-			
-			let label = appMenu._label._label;
-			
+
+			// In Shell 3.16 it's appMenu._label
+			let label = appMenu._label._label || appMenu._label;
 			if(!label.get_clutter_text().get_layout().is_ellipsized()) {
 				// Do not need to hide.
 				tooltipDelayCallbackID = 0;
