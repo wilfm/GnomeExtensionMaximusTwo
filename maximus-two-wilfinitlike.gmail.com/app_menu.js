@@ -38,7 +38,12 @@ function updateAppMenu() {
 	}
 	
 	LOG('Override title ' + title);
-	appMenu._label.setText(title);
+	if (appMenu._label.set_text) {
+		// Gnome Shell 3.16
+		appMenu._label.set_text(title);
+	} else if (appMenu._label.setText){
+		appMenu._label.setText(title);
+	}
 	tooltip.text = title;
 	
 	return false;
