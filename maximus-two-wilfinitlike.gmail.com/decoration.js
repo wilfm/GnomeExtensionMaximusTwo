@@ -1,5 +1,7 @@
+const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Mainloop = imports.mainloop;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Meta = imports.gi.Meta;
 const Util = imports.misc.util;
 
@@ -74,6 +76,22 @@ function guessWindowXID(win) {
 }
 
 /**
+* Changes to config are not loaded without restart. 
+*
+* Reloading would require that we undo the xprop statement, otherwise it has no effect
+*/
+let ignorableApps = [];
+
+function _isIgnorebleWindow(title) {
+  for (let i = 0; i < ignorableApps.length; i++) {
+    if (title.indexOf(ignorableApps[i]) != -1) {
+	  return true;
+	}
+  }
+  return false;
+}
+
+/**
  * Tells the window manager to hide the titlebar on maximised windows.
  *
  * Does this by setting the _GTK_HIDE_TITLEBAR_WHEN_MAXIMIZED hint - means
@@ -92,7 +110,19 @@ function guessWindowXID(win) {
  * is `true`. Internal use.
  */
 function setHideTitlebar(win, hide, stopAdding) {
-	LOG('setHideTitlebar: ' + win.get_title() + ': ' + hide + (stopAdding ? ' (2)' : ''));
+
+	let title = win.get_title();
+
+	if (title == null || _isIgnorebleWindow(title)) {
+		return;
+	}
+
+
+	if (title == null || title.indexOf("IntelliJ IDEA") != -1) {
+		return;
+	}
+
+	LOG('setHideTitlebar: ' + title + ': ' + hide + (stopAdding ? ' (2)' : ''));
 
 	let id = guessWindowXID(win);
 	/* Newly-created windows are added to the workspace before
@@ -122,7 +152,26 @@ function setHideTitlebar(win, hide, stopAdding) {
 		cmd[2] = win.get_title();
 	}
 	LOG(cmd.join(' '));
-	Util.spawn(cmd);
+	
+	// Run xprop
+	[success, pid] = GLib.spawn_async(null, cmd, null,
+					  GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+					  null);
+
+	// After xprop completes, unmaximize and remaximize any window
+	// that is already maximized. It seems that setting the xprop on
+	// a window that is already maximized doesn't actually take
+	// effect immediately but it needs a focuse change or other
+	// action to force a relayout. Doing unmaximize and maximize
+	// here seems to be an uninvasive way to handle this. This needs
+	// to happen _after_ xprop completes.
+	GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, function () {
+		let flags = win.get_maximized();
+		if (flags == Meta.MaximizeFlags.BOTH) {
+			win.unmaximize(flags);
+			win.maximize(flags);
+		}
+  });
 }
 
 /**** Callbacks ****/
@@ -195,7 +244,32 @@ function onChangeNWorkspaces() {
 /*
  * Subextension hooks
  */
-function init() {}
+function init() {
+  _loadSettings();
+}
+
+function _loadSettings() {
+  let schema = "org.gnome.shell.extensions.maximus-two";
+
+  const GioSSS = Gio.SettingsSchemaSource;
+
+  let schemaDir = Me.dir.get_child('schemas');
+  let schemaSource;
+  if (schemaDir.query_exists(null)) {
+    schemaSource = GioSSS.new_from_directory(schemaDir.get_path(), GioSSS.get_default(), false);
+  } else {
+    schemaSource = GioSSS.get_default();
+  }
+
+  schema = schemaSource.lookup(schema, true);
+  if (!schema) {
+    throw new Error('Schema ' + schema + ' could not be found for extension ' +
+      Me.metadata.uuid + '. Please check your installation.');
+  }
+
+  this._settingsObject = new Gio.Settings({ settings_schema: schema });
+  ignorableApps = JSON.parse(this._settingsObject.get_string("ignorable-apps"));
+}
 
 let changeWorkspaceID = 0;
 function enable() {
