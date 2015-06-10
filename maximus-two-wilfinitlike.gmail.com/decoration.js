@@ -1,5 +1,6 @@
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Lang = imports.lang;
 const Mainloop = imports.mainloop;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Meta = imports.gi.Meta;
@@ -80,11 +81,9 @@ function guessWindowXID(win) {
 *
 * Reloading would require that we undo the xprop statement, otherwise it has no effect
 */
-let ignorableApps = [];
-
 function _isIgnorebleWindow(title) {
-  for (let i = 0; i < ignorableApps.length; i++) {
-    if (title.indexOf(ignorableApps[i]) != -1) {
+  for (let i = 0; i < this.ignorableApps.length; i++) {
+    if (title.indexOf(this.ignorableApps[i]) != -1) {
 	  return true;
 	}
   }
@@ -138,6 +137,10 @@ function setHideTitlebar(win, hide, stopAdding) {
 		return;
 	}
 
+	_doHideTitlebar(win, hide, id);
+}
+
+function _doHideTitlebar(win, hide, id) {
 	/* Undecorate with xprop. Use _GTK_HIDE_TITLEBAR_WHEN_MAXIMIZED.
 	 * See (eg) mutter/src/window-props.c
 	 */
@@ -246,6 +249,23 @@ function onChangeNWorkspaces() {
  */
 function init() {
   _loadSettings();
+
+  this._settingsListenerId = this._settingsObject.connect(
+        'changed::ignorable-apps',
+        Lang.bind(this, this._settingsChanged)
+      );
+}
+
+function _settingsChanged() {
+	this.ignorableApps = JSON.parse(this._settingsObject.get_string("ignorable-apps"));
+
+
+	let apps = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+
+
+	for (let i = 0; i < apps.length; i++) {
+		_doHideTitlebar(apps[i], !this._isIgnorebleWindow(apps[i].get_title()));
+	}
 }
 
 function _loadSettings() {
@@ -268,7 +288,7 @@ function _loadSettings() {
   }
 
   this._settingsObject = new Gio.Settings({ settings_schema: schema });
-  ignorableApps = JSON.parse(this._settingsObject.get_string("ignorable-apps"));
+  this.ignorableApps = JSON.parse(this._settingsObject.get_string("ignorable-apps"));
 }
 
 let changeWorkspaceID = 0;
@@ -329,4 +349,7 @@ function disable() {
 		}
 		delete win._pixelSaverOriginalState;
 	}
+
+	this._settingsObject.disconnect(this._settingsListenerId);
+
 }
