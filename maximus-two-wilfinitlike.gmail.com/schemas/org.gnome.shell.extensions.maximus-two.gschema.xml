@@ -1,0 +1,8 @@
+<schemalist>
+  <schema id="org.gnome.shell.extensions.maximus-two" path="/org/gnome/shell/extensions/maximus-two/">
+    <key type="s" name="ignorable-apps">
+      <default>"{}"</default>
+      <summary>A list of window titles that may not be maximized</summary>
+    </key>
+  </schema>
+</schemalist>
