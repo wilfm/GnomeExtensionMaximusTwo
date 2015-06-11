@@ -1,13 +1,16 @@
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Mainloop = imports.mainloop;
+const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
 const Tweener = imports.ui.tweener;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const Util = Me.imports.util;
+const Utils = Me.imports.utils;
+
+const MAXIMIZED = (Meta.MaximizeFlags.HORIZONTAL | Meta.MaximizeFlags.VERTICAL);
 
 function LOG(message) {
 	// log("[maximus-two]: " + message);
@@ -18,6 +21,25 @@ function WARN(message) {
 }
 
 let appMenu = null;
+
+function getWindow() {
+	// get all window in stacking order.
+	let windows = global.display.sort_windows_by_stacking(
+		global.screen.get_active_workspace().list_windows().filter(function (w) {
+			return w.get_window_type() !== Meta.WindowType.DESKTOP;
+		})
+	);
+	
+	let i = windows.length;
+    while (i--) {
+    	let window = windows[i];
+    	if (window.get_maximized() === MAXIMIZED && !window.minimized) {
+			return window;
+		}
+	}
+	
+	return null;
+}
 
 /*
  * AppMenu synchronization
@@ -32,7 +54,7 @@ function updateAppMenu() {
 	let title = win.title;
 	
 	// Not the topmost maximized window.
-	if(win !== Util.getWindow()) {
+	if(win !== this.getWindow()) {
 		let app = Shell.WindowTracker.get_default().get_window_app(win);
 		title = app.get_name();
 	}

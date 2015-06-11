@@ -1,7 +1,13 @@
 const GLib = imports.gi.GLib;
+const Lang = imports.lang;
 const Mainloop = imports.mainloop;
+
 const Meta = imports.gi.Meta;
 const Util = imports.misc.util;
+
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils;
 
 function LOG(message) {
 	// log("[maximus-two]: " + message);
@@ -74,6 +80,20 @@ function guessWindowXID(win) {
 }
 
 /**
+* Changes to config are not loaded without restart. 
+*
+* Reloading would require that we undo the xprop statement, otherwise it has no effect
+*/
+function _isIgnorebleWindow(title) {
+  for (let i = 0; i < this.ignorableApps.length; i++) {
+    if (title.indexOf(this.ignorableApps[i]) != -1) {
+	  return true;
+	}
+  }
+  return false;
+}
+
+/**
  * Tells the window manager to hide the titlebar on maximised windows.
  *
  * Does this by setting the _GTK_HIDE_TITLEBAR_WHEN_MAXIMIZED hint - means
@@ -108,6 +128,10 @@ function setHideTitlebar(win, hide, stopAdding) {
 		return;
 	}
 
+	_doHideTitlebar(win, hide, id);
+}
+
+function _doHideTitlebar(win, hide, id) {
 	/* Undecorate with xprop. Use _GTK_HIDE_TITLEBAR_WHEN_MAXIMIZED.
 	 * See (eg) mutter/src/window-props.c
 	 */
@@ -195,7 +219,25 @@ function onChangeNWorkspaces() {
 /*
  * Subextension hooks
  */
-function init() {}
+function init() {
+	this.ignorableApps = Utils._loadSettings();
+
+	this._settingsListenerId = Utils._settingsObject.connect(
+		'changed::ignorable-apps',
+		Lang.bind(this, this._settingsChanged)
+	);
+}
+
+function _settingsChanged() {
+	this.ignorableApps = JSON.parse(Utils._settingsObject.get_string(Utils.IGNORABLE_APPS));
+
+	let apps = global.display.get_tab_list(Meta.TabList.NORMAL_ALL, null);
+
+
+	for (let i = 0; i < apps.length; i++) {
+		_doHideTitlebar(apps[i], !this._isIgnorebleWindow(apps[i].get_title()));
+	}
+}
 
 let changeWorkspaceID = 0;
 function enable() {
@@ -254,5 +296,8 @@ function disable() {
 			setHideTitlebar(win, false);
 		}
 		delete win._pixelSaverOriginalState;
+
+		Utils._settingsObject.disconnect(this._settingsListenerId);
+
 	}
 }
