@@ -8,7 +8,7 @@ Prerequisites
 You will need `xprop` and `xwininfo` installed for this extension to work.
 Under Arch, this should be provided as a dependencie of [`xorg-utils`](https://www.archlinux.org/packages/extra/any/xorg-utils/) package (the [`xorg-xprop`](https://www.archlinux.org/packages/extra/x86_64/xorg-xprop/) & [`xorg-xwininfo`](https://www.archlinux.org/packages/extra/x86_64/xorg-xwininfo/) packages.)<br>
 Under Debian/Ubuntu/*(and probably most other debian based distros)*, this is provided by the [`x11-utils`](http://packages.ubuntu.com/trusty/x11-utils) package<br>
-Under Fedora, this is provided by the `xorg-x11-utils` package
+Under Fedora, these programs are provided by the [`xorg-x11-utils`](https://apps.fedoraproject.org/packages/xorg-x11-utils) package.
 
 
 How to install
