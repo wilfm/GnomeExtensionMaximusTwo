@@ -1,7 +1,8 @@
 /*global global, log */ // <-- jshint
 /*jshint maxlen: 150 */
-/* @overview
- * Pixel Saver v1.0
+/* Maximus Two v5, based on...
+ * @overview
+ * Pixel Saver 7
  * Amaury SECHET <deadalnix@gmail.com>
  * Other contributors:
  * - Amy Chan <mathematical.coffee@gmail.com>
