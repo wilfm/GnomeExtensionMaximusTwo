@@ -24,15 +24,14 @@ let appMenu = null;
  */
 function updateAppMenu() {
 	let win = global.display.focus_window;
-
-	if(!win) {
+	if (!win) {
 		return false;
 	}
 
 	let title = win.title;
 
 	// Not the topmost maximized window.
-	if(win !== Util.getWindow()) {
+	if (win !== Util.getWindow()) {
 		let app = Shell.WindowTracker.get_default().get_window_app(win);
 		title = app.get_name();
 	}
@@ -50,17 +49,17 @@ function updateAppMenu() {
 let activeWindow = null;
 let awCallbackID = 0;
 function changeActiveWindow(win) {
-	if(win === activeWindow) {
+	if (win === activeWindow) {
 		return;
 	}
 
-	if(activeWindow) {
+	if (activeWindow) {
 		activeWindow.disconnect(awCallbackID);
 	}
 
 	activeWindow = win;
 
-	if(win) {
+	if (win) {
 		awCallbackID = win.connect('notify::title', updateAppMenu);
 		updateAppMenu();
 	}
@@ -97,9 +96,9 @@ let HIDE_DURATION = 0.1;
 let tooltipDelayCallbackID = 0;
 let menuCallbackID = 0;
 
-function onHover(actor) {
+function onAppMenuHover(actor) {
 	let hover = actor.get_hover();
-	if(showTooltip === hover) {
+	if (showTooltip === hover) {
 		return false;
 	}
 
@@ -122,7 +121,7 @@ function onHover(actor) {
 
 			Main.uiGroup.add_actor(tooltip);
 			menuCallbackID = appMenu.menu.connect('open-state-changed', function(menu, open) {
-				if(open) {
+				if (open) {
 					Main.uiGroup.remove_actor(tooltip);
 				} else {
 					Main.uiGroup.add_actor(tooltip);
@@ -147,7 +146,7 @@ function onHover(actor) {
 
 			return false;
 		});
-	} else if(tooltipDelayCallbackID > 0) {
+	} else if (tooltipDelayCallbackID > 0) {
 		if(!Mainloop.source_remove(tooltipDelayCallbackID)) {
 			// If the event ran, then we hide.
 			LOG('hide title tooltip');
@@ -180,7 +179,7 @@ function onHover(actor) {
 function init() {
 	tooltip = new St.Label({
 		style_class: 'tooltip dash-label',
-		text: ''
+		text: '',
 	});
 }
 
@@ -189,16 +188,7 @@ let focusCallbackID = 0;
 let tooltipCallbackID = 0;
 function enable() {
 	tooltip.opacity = 0;
-
-	if(Main.panel.statusArea && Main.panel.statusArea["appMenu"]) {
-		appMenu = Main.panel.statusArea["appMenu"];
-	} else if(Main.panel._appMenu) {
-		appMenu = Main.panel._appMenu;
-	} else if(Main.panel.statusArea["appMenu"]) {
-		appMenu = Main.panel.statusArea["appMenu"];
-	} else {
-		appMenu = Main.panel.statusArea.appMenu;
-	}
+	appMenu = Main.panel.statusArea.appMenu;
 
 	focusCallbackID = Shell.WindowTracker.get_default().connect('notify::focus-app', onFocusChange);
 
@@ -210,7 +200,7 @@ function enable() {
 		Mainloop.idle_add(updateAppMenu);
 	}));
 
-	tooltipCallbackID = appMenu.actor.connect('notify::hover', onHover);
+	tooltipCallbackID = appMenu.actor.connect('notify::hover', onAppMenuHover);
 }
 
 function disable() {
