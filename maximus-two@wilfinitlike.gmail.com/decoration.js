@@ -82,7 +82,7 @@ function guessWindowXID(win) {
  *
  * **Caveat**: doesn't work with Ubuntu's Ambiance and Radiance window themes -
  * my guess is they don't respect or implement this property.
- * 
+ *
  * I don't know how to read the inital value, so I'm not sure how to resore it.
  *
  * @param {Meta.Window} win - window to set the HIDE_TITLEBAR_WHEN_MAXIMIZED property of.
@@ -144,7 +144,7 @@ function onWindowAdded(ws, win) {
 	if (win._pixelSaverOriginalState !== undefined) {
 		return false;
 	}
-	
+
 	/* Newly-created windows are added to the workspace before
 	 * the compositor knows about them: get_compositor_private() is null.
 	 * Additionally things like .get_maximized() aren't properly done yet.
@@ -153,11 +153,11 @@ function onWindowAdded(ws, win) {
 	// FIXME: get hide-titlebar-when-maximized value
 	win._pixelSaverOriginalState = false;
 	LOG('onWindowAdded: ' + win.get_title() + ' initially hide title ? ' + win._pixelSaverOriginalState);
-	
+
 	if(win._pixelSaverOriginalState === false) {
 		setHideTitlebar(win, true);
 	}
-	
+
 	return false;
 }
 
@@ -176,7 +176,7 @@ function onChangeNWorkspaces() {
 		let ws = workspaces[i];
 		ws.disconnect(ws._pixelSaverWindowAddedId);
 	}
-	
+
 	workspaces = [];
 	i = global.screen.n_workspaces;
 	while (i--) {
@@ -188,7 +188,7 @@ function onChangeNWorkspaces() {
 			Mainloop.idle_add(function () { return onWindowAdded(ws, win); });
 		});
 	}
-	
+
 	return false;
 }
 
@@ -201,7 +201,7 @@ let changeWorkspaceID = 0;
 function enable() {
 	/* Connect events */
 	changeWorkspaceID = global.screen.connect('notify::n-workspaces', onChangeNWorkspaces);
-	
+
 	/* Go through already-maximised windows & undecorate.
 	 * This needs a delay as the window list is not yet loaded
 	 *  when the extension is loaded.
@@ -221,7 +221,7 @@ function enable() {
 			}
 			onWindowAdded(null, win);
 		}
-		
+
 		onChangeNWorkspaces();
 		return false;
 	});
@@ -232,7 +232,7 @@ function disable() {
 		global.window_manager.disconnect(changeWorkspaceID);
 		changeWorkspaceID = 0;
 	}
-	
+
 	/* disconnect window-added from workspaces */
 	let i = workspaces.length;
 	while (i--) {
@@ -240,7 +240,7 @@ function disable() {
 		delete workspaces[i]._pixelSaverWindowAddedId;
 	}
 	workspaces = [];
-	
+
 	let winList = global.get_window_actors().map(function (w) { return w.meta_window; }),
 		i       = winList.length;
 	while (i--) {
@@ -249,10 +249,11 @@ function disable() {
 			continue;
 		}
 		LOG('stopUndecorating: ' + win.title);
-		
+
 		if (win._pixelSaverOriginalState === false) {
 			setHideTitlebar(win, false);
 		}
 		delete win._pixelSaverOriginalState;
 	}
 }
+

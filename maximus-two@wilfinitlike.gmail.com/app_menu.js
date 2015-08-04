@@ -24,23 +24,23 @@ let appMenu = null;
  */
 function updateAppMenu() {
 	let win = global.display.focus_window;
-	
+
 	if(!win) {
 		return false;
 	}
-	
+
 	let title = win.title;
-	
+
 	// Not the topmost maximized window.
 	if(win !== Util.getWindow()) {
 		let app = Shell.WindowTracker.get_default().get_window_app(win);
 		title = app.get_name();
 	}
-	
+
 	LOG('Override title ' + title);
 	appMenu._label.setText(title);
 	tooltip.text = title;
-	
+
 	return false;
 }
 
@@ -53,13 +53,13 @@ function changeActiveWindow(win) {
 	if(win === activeWindow) {
 		return;
 	}
-	
+
 	if(activeWindow) {
 		activeWindow.disconnect(awCallbackID);
 	}
-	
+
 	activeWindow = win;
-	
+
 	if(win) {
 		awCallbackID = win.connect('notify::title', updateAppMenu);
 		updateAppMenu();
@@ -70,14 +70,16 @@ function changeActiveWindow(win) {
  * Focus change
  */
 function onFocusChange() {
-	if (!Shell.WindowTracker.get_default().focus_app &&
-		global.stage_input_mode == Shell.StageInputMode.FOCUSED) {
+	let input_mode_check = (global.stage_input_mode === undefined)
+		? true
+		: global.stage_input_mode == Shell.StageInputMode.FOCUSED;
+	if (!Shell.WindowTracker.get_default().focus_app && input_mode_check) {
 		// If the app has just lost focus to the panel, pretend
 		// nothing happened; otherwise you can't keynav to the
 		// app menu.
 		return false;
 	}
-	
+
 	changeActiveWindow(global.display.focus_window);
 	return false;
 }
@@ -100,24 +102,24 @@ function onHover(actor) {
 	if(showTooltip === hover) {
 		return false;
 	}
-	
+
 	// We are not in the right state, let's fix that.
 	showTooltip = hover;
-	
+
 	if (showTooltip) {
 		tooltipDelayCallbackID = Mainloop.timeout_add(SHOW_DELAY, function() {
 			if (!showTooltip) {
 				WARN('showTooltip is false and delay callback ran.');
 			}
-			
+
 			let label = appMenu._label._label;
-			
+
 			if(!label.get_clutter_text().get_layout().is_ellipsized()) {
 				// Do not need to hide.
 				tooltipDelayCallbackID = 0;
 				return false;
 			}
-			
+
 			Main.uiGroup.add_actor(tooltip);
 			menuCallbackID = appMenu.menu.connect('open-state-changed', function(menu, open) {
 				if(open) {
@@ -126,15 +128,15 @@ function onHover(actor) {
 					Main.uiGroup.add_actor(tooltip);
 				}
 			});
-			
+
 			[bx, by] = label.get_transformed_position();
 			[w, h] = label.get_transformed_size();
-			
+
 			let y = by + h + 5;
 			let x = bx - Math.round((tooltip.get_width() - w)/2);
 			tooltip.opacity = 0;
 			tooltip.set_position(x, y);
-			
+
 			LOG('show title tooltip');
 			Tweener.removeTweens(tooltip);
 			Tweener.addTween(tooltip, {
@@ -142,19 +144,19 @@ function onHover(actor) {
 				time: SHOW_DURATION,
 				transition: 'easeOutQuad',
 			});
-			
+
 			return false;
 		});
 	} else if(tooltipDelayCallbackID > 0) {
 		if(!Mainloop.source_remove(tooltipDelayCallbackID)) {
 			// If the event ran, then we hide.
 			LOG('hide title tooltip');
-			
+
 			if(menuCallbackID) {
 				appMenu.menu.disconnect(menuCallbackID);
 				menuCallbackID = 0;
 			}
-			
+
 			Tweener.removeTweens(tooltip);
 			Tweener.addTween(tooltip, {
 				opacity: 0,
@@ -165,10 +167,10 @@ function onHover(actor) {
 				}
 			});
 		}
-		
+
 		tooltipDelayCallbackID = 0;
 	}
-	
+
 	return false;
 }
 
@@ -187,57 +189,58 @@ let focusCallbackID = 0;
 let tooltipCallbackID = 0;
 function enable() {
 	tooltip.opacity = 0;
-	
+
 	if(Main.panel.statusArea && Main.panel.statusArea["appMenu"]) {
 		appMenu = Main.panel.statusArea["appMenu"];
-    } else if(Main.panel._appMenu) {
-        appMenu = Main.panel._appMenu;
-    } else if(Main.panel.statusArea["appMenu"]) {
-        appMenu = Main.panel.statusArea["appMenu"];
+	} else if(Main.panel._appMenu) {
+		appMenu = Main.panel._appMenu;
+	} else if(Main.panel.statusArea["appMenu"]) {
+		appMenu = Main.panel.statusArea["appMenu"];
 	} else {
 		appMenu = Main.panel.statusArea.appMenu;
 	}
 
 	focusCallbackID = Shell.WindowTracker.get_default().connect('notify::focus-app', onFocusChange);
-	
+
 	wmCallbackIDs.push(global.window_manager.connect('maximize', updateAppMenu));
 	wmCallbackIDs.push(global.window_manager.connect('unmaximize', updateAppMenu));
-	
+
 	// note: 'destroy' needs a delay for .list_windows() report correctly
 	wmCallbackIDs.push(global.window_manager.connect('destroy', function () {
 		Mainloop.idle_add(updateAppMenu);
 	}));
-	
+
 	tooltipCallbackID = appMenu.actor.connect('notify::hover', onHover);
 }
 
 function disable() {
 	appMenu.actor.disconnect(tooltipCallbackID);
-	
+
 	Shell.WindowTracker.get_default().disconnect(focusCallbackID);
 	focusCallbackID = 0;
-	
+
 	for (let i = 0; i < wmCallbackIDs.length; ++i) {
 		global.window_manager.disconnect(wmCallbackIDs[i]);
 	}
-	
+
 	wmCallbackIDs = [];
-	
+
 	if(activeWindow) {
 		activeWindow.disconnect(awCallbackID);
 		awCallbackID = 0;
 		activeWindow = null;
 	}
-	
+
 	if(tooltipDelayCallbackID) {
 		Mainloop.source_remove(tooltipDelayCallbackID);
 		tooltipDelayCallbackID = 0;
 	}
-	
+
 	if(menuCallbackID) {
 		appMenu.menu.disconnect(menuCallbackID);
 		menuCallbackID = 0;
 	}
-	
+
 	Main.uiGroup.remove_actor(tooltip);
 }
+
