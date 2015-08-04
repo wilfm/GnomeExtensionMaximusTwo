@@ -50,21 +50,22 @@ function guessWindowXID(win) {
 		id = GLib.spawn_command_line_sync('xwininfo -children -id 0x%x'.format(act['x-window']));
 		if (id[0]) {
 			let str = id[1].toString();
+			if (str) {
+				/* The X ID of the window is the one preceding the target window's title.
+				 * This is to handle cases where the window has no frame and so
+				 * act['x-window'] is actually the X ID we want, not the child.
+				 */
+				let regexp = new RegExp('(0x[0-9a-f]+) +"%s"'.format(win.title));
+				id = str.match(regexp);
+				if (id) {
+					return id[1];
+				}
 
-			/* The X ID of the window is the one preceding the target window's title.
-			 * This is to handle cases where the window has no frame and so
-			 * act['x-window'] is actually the X ID we want, not the child.
-			 */
-			let regexp = new RegExp('(0x[0-9a-f]+) +"%s"'.format(win.title));
-			id = str.match(regexp);
-			if (id) {
-				return id[1];
-			}
-
-			/* Otherwise, just grab the child and hope for the best */
-			id = str.split(/child(?:ren)?:/)[1].match(/0x[0-9a-f]+/);
-			if (id) {
-				return id[0];
+				/* Otherwise, just grab the child and hope for the best */
+				id = str.split(/child(?:ren)?:/)[1].match(/0x[0-9a-f]+/);
+				if (id) {
+					return id[0];
+				}
 			}
 		}
 	}
@@ -122,7 +123,26 @@ function setHideTitlebar(win, hide, stopAdding) {
 		cmd[2] = win.get_title();
 	}
 	LOG(cmd.join(' '));
-	Util.spawn(cmd);
+	
+	// Run xprop
+	[success, pid] = GLib.spawn_async(null, cmd, null,
+					  GLib.SpawnFlags.SEARCH_PATH | GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+					  null);
+
+	// After xprop completes, unmaximize and remaximize any window
+	// that is already maximized. It seems that setting the xprop on
+	// a window that is already maximized doesn't actually take
+	// effect immediately but it needs a focuse change or other
+	// action to force a relayout. Doing unmaximize and maximize
+	// here seems to be an uninvasive way to handle this. This needs
+	// to happen _after_ xprop completes.
+	GLib.child_watch_add(GLib.PRIORITY_DEFAULT, pid, function () {
+		let flags = win.get_maximized();
+		if (flags == Meta.MaximizeFlags.BOTH) {
+			win.unmaximize(flags);
+			win.maximize(flags);
+		}
+  });
 }
 
 /**** Callbacks ****/
