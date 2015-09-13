@@ -20,6 +20,20 @@ function WARN(message) {
 let appMenu = null;
 
 /*
+ * Find the label element from the appMenu so we can manipulate it.
+ */
+function _getAppMenuLabel() {
+	if (!appMenu)
+		return null;
+
+	let label = appMenu._label;
+	if (label._label !== undefined)
+		label = label._label;
+
+	return label;
+}
+
+/*
  * AppMenu synchronization
  */
 function updateAppMenu() {
@@ -37,7 +51,11 @@ function updateAppMenu() {
 	}
 
 	LOG('Override title ' + title);
-	appMenu._label.setText(title);
+
+	let label = _getAppMenuLabel();
+	if(label)
+		label.text = title;
+
 	tooltip.text = title;
 
 	return false;
@@ -111,9 +129,13 @@ function onAppMenuHover(actor) {
 				WARN('showTooltip is false and delay callback ran.');
 			}
 
-			let label = appMenu._label._label;
+			let label = _getAppMenuLabel();
+			if (!label) {
+				LOG("Failed to retrieve appMenu label");
+				return false;
+			}
 
-			if(!label.get_clutter_text().get_layout().is_ellipsized()) {
+			if (!label.get_clutter_text().get_layout().is_ellipsized()) {
 				// Do not need to hide.
 				tooltipDelayCallbackID = 0;
 				return false;
