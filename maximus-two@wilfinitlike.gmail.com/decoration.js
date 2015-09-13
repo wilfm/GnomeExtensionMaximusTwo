@@ -204,15 +204,18 @@ function onWindowAdded(ws, win) {
 	 * (see workspace.js _doAddWindow)
 	 */
 	if (!win.get_compositor_private()) {
-		Mainloop.idle_add(function () {
-			onWindowAdded(ws, win);
-			return false;
+		Mainloop.timeout_add(20, function () {
+			if(win.get_compositor_private()) {
+				onWindowAdded(ws, win);
+				return false;
+			}
+			return true;
 		});
 		return false;
 	}
 
 	let retry = 3;
-	Mainloop.idle_add(function () {
+	Mainloop.timeout_add(20, function () {
 		let id = guessWindowXID(win);
 		if (!id) {
 			if (--retry) {
