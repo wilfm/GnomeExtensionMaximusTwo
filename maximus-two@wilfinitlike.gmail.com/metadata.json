@@ -3,7 +3,7 @@
   "description": "Removes the title bar on maximised windows.\n Based on Pixel Saver (use Window Buttons to get the buttons (you can configure them then)\n You should be able to use the original Maximus extension if you have 3.4 or 3.6\nPlease report bugs on the github issues page: https://github.com/wilfm/GnomeExtensionMaximusTwo/issues\nNote you need xprop installed for this to work - see the github page for help with which package to install.",
   "name": "Maximus Two",
   "shell-version": [
-    "3.16"
+    "3.18"
   ],
   "url": "https://github.com/wilfm/GnomeExtensionMaximusTwo",
   "uuid": "maximus-two@wilfinitlike.gmail.com",
