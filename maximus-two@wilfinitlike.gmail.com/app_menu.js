@@ -9,6 +9,9 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Util = Me.imports.util;
 
+// Get shell version for backwards compatible with v3.16
+const shell_version = parseFloat(imports.misc.config.PACKAGE_VERSION.split('.').slice(0, 2).join('.'));
+
 function LOG(message) {
 	// log("[maximus-two]: " + message);
 }
@@ -214,8 +217,15 @@ function enable() {
 
 	focusCallbackID = Shell.WindowTracker.get_default().connect('notify::focus-app', onFocusChange);
 
-	wmCallbackIDs.push(global.window_manager.connect('maximize', updateAppMenu));
-	wmCallbackIDs.push(global.window_manager.connect('unmaximize', updateAppMenu));
+	if(shell_version >= 3.18)
+	{
+		wmCallbackIDs.push(global.window_manager.connect('size-change', updateAppMenu));
+	}
+	else
+	{
+		wmCallbackIDs.push(global.window_manager.connect('maximize', updateAppMenu));
+		wmCallbackIDs.push(global.window_manager.connect('unmaximize', updateAppMenu));
+	}
 
 	// note: 'destroy' needs a delay for .list_windows() report correctly
 	wmCallbackIDs.push(global.window_manager.connect('destroy', function () {
