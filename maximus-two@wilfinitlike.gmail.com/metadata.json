@@ -4,8 +4,7 @@
   "name": "Maximus Two",
   "shell-version": [
     "3.16",
-    "3.18",
-    "3.20"
+    "3.18"
   ],
   "url": "https://github.com/wilfm/GnomeExtensionMaximusTwo",
   "uuid": "maximus-two@wilfinitlike.gmail.com",
