@@ -115,7 +115,11 @@ function getOriginalState(win) {
 		return win._pixelSaverOriginalState = state;
 	}
 
-	WARN("Can't find original state for " + win.title + " with id " + id);
+	// warnings filter
+	if(win.title != "cairo-dock-dialog" && win.title != "gnome-shell")
+	{
+		WARN("Can't find original state for " + win.title + " with id " + id);
+	}
 	return false;
 }
 
