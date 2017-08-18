@@ -311,8 +311,8 @@ function disable() {
 	}
 	workspaces = [];
 
-	let winList = global.get_window_actors().map(function (w) { return w.meta_window; }),
-		i       = winList.length;
+	let winList = global.get_window_actors().map(function (w) { return w.meta_window; });
+	i = winList.length;
 	while (i--) {
 		let win = winList[i];
 		if (win.window_type === Meta.WindowType.DESKTOP) {
