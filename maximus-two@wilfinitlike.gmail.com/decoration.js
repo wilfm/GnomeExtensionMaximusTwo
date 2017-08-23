@@ -150,7 +150,7 @@ function setHideTitlebar(win, hide) {
 	LOG(cmd.join(' '));
 
 	// Run xprop
-	[success, pid] = GLib.spawn_async(
+	let [success, pid] = GLib.spawn_async(
 		null,
 		cmd,
 		null,
