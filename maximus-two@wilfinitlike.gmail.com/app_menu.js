@@ -10,7 +10,7 @@ const Me = ExtensionUtils.getCurrentExtension();
 const Util = Me.imports.util;
 
 // Get shell version for backwards compatible with v3.16
-const shell_version = parseFloat(imports.misc.config.PACKAGE_VERSION.split('.').slice(0, 2).join('.'));
+const shell_version = Util.shell_version;
 
 function LOG(message) {
     // log("[maximus-two]: " + message);
@@ -48,7 +48,7 @@ function updateAppMenu() {
     let title = win.title;
 
     // Not the topmost maximized window.
-    if (win !== Util.XgetWindow()) {
+    if (win !== Util.getWindow()) {
         let app = Shell.WindowTracker.get_default().get_window_app(win);
         title = app.get_name();
     }

@@ -5,7 +5,8 @@ const Util = imports.misc.util;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
-const GScreen = Me.imports.util.GScreen;
+const WSM = Me.imports.util.WSM;
+const GD = Me.imports.util.WSM;
 
 function LOG(message) {
     // log("[maximus-two]: " + message);
@@ -257,9 +258,10 @@ function onChangeNWorkspaces() {
     }
 
     workspaces = [];
-    i = GScreen.n_workspaces;
+    i = WSM.n_workspaces;
+    WARN("n_workspaces: " + i);
     while (i--) {
-        let ws = GScreen.get_workspace_by_index(i);
+        let ws = WSM.get_workspace_by_index(i);
         workspaces.push(ws);
         // we need to add a Mainloop.idle_add, or else in onWindowAdded the
         // window's maximized state is not correct yet.
@@ -282,7 +284,7 @@ let changeWorkspaceID = 0;
 
 function enable() {
     /* Connect events */
-    changeWorkspaceID = GScreen.connect('notify::n-workspaces', onChangeNWorkspaces);
+    changeWorkspaceID = global.window_manager.connect('notify::n-workspaces', onChangeNWorkspaces);
 
     /* Go through already-maximised windows & undecorate.
      * This needs a delay as the window list is not yet loaded
