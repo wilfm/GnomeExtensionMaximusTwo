@@ -1,2 +1,9 @@
 maximus-two.sublime-project
 maximus-two.sublime-workspace
+GPATH
+GRTAGS
+GTAGS
+*~
+\#*\#
+.\#*
+.emacs.desktop
